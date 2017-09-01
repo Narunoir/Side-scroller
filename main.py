@@ -26,16 +26,18 @@ class Game:
         self.all_sprites = pg.sprite.Group()
         self.platforms = pg.sprite.Group()
         self.mobs = pg.sprite.Group()
-        self.player = Player()
-        self.all_sprites.add(self.player)
+
+        self.player = Player(self)
+
         self.p1 = Platform(0, HEIGHT -40, WIDTH, 40)
         p2 = Platform(WIDTH /2 -200, HEIGHT *3/4, 100, 20)
         p3 = Platform(500, 400, 100, 20)
         mob1 = Mob(WIDTH - 15, HEIGHT - 100, 100, 40)
         mob2 = Mob(50, HEIGHT - 100, 100, 40)
-        self.all_sprites.add(self.p1, p2, p3, mob1, mob2)
+        self.all_sprites.add(self.player, self.p1, p2,p3, mob1,mob2)
         self.platforms.add(self.p1, p2, p3)
         self.mobs.add(mob1, mob2)
+
         self.mob_timer = 0
         self.run()
         self.start_screen()
@@ -60,6 +62,7 @@ class Game:
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_SPACE:
                     self.player.jump()
+
             #if event.type == pg.KEYUP:w
                 #if event.key == pg.K_SPACE:
                     #self.player.jump_cut()
@@ -73,28 +76,34 @@ class Game:
                 self.player.pos.y = hits[0].rect.top
                 self.player.vel.y = 1
 
+
         # Mobs walk on platforms
-        mob_walk = pg.sprite.groupcollide(self.mobs, self.platforms, False, False)
-        if mob_walk:
-            for mob in mob_walk:
-                if mob.rect.bottom > self.p1.rect.top:
-                    mob.rect.bottom = self.p1.rect.top
-                    mob.vel.y = 0
-        attacks = pg.sprite.spritecollide(self.player, self.mobs, False)
-        for mob in attacks:
-            mob.health -= 10
-            if mob.health <= 0:
-                mob.kill()
-            if self.player.face_left == False:
-                if mob.vel.x < 0:
-                    mob.pos.x += 200
-                if mob.vel.x > 0:
-                    mob.pos.x -= 200
-            elif self.player.face_left == True:
-                if mob.vel.x > 0:
-                    mob.pos.x -= 200
-                if mob.vel.x < 0:
-                    mob.pos.x += 200
+        for mob in self.mobs:
+            if mob.rect.bottom > self.p1.rect.top:
+                mob.rect.bottom = self.p1.rect.top
+                mob.vel.y = 0
+
+        # Mobs Attacking
+        mob_attacks = pg.sprite.spritecollide(self.player, self.mobs, False)
+        for mob in mob_attacks:
+            pass
+            #mob.health -= 25
+            #if mob.health <= 0:
+                #mob.kill()
+            #if self.player.face_left == False:
+                #if mob.vel.x < 0:
+                    #mob.pos.x += 200
+                #if mob.vel.x > 0:
+                    #mob.pos.x -= 200
+            #elif self.player.face_left == True:
+                #if mob.vel.x > 0:
+                    #mob.pos.x -= 200
+                #if mob.vel.x < 0:
+                    #mob.pos.x += 200
+
+
+
+
         #make more mobs
         Mob_list = [Mob(WIDTH + 150, HEIGHT - 100, 100, 40)]
         now = pg.time.get_ticks()
@@ -113,6 +122,10 @@ class Game:
                 plat.rect.x -= max(abs(self.player.vel.x), 2)
                 if plat.rect.x <= 0 - 400:
                     plat.kill()
+            for mob in self.mobs:
+                mob.pos.x -= max(abs(self.player.vel.x), 3)
+                if mob.pos.x < 0 -1000:
+                    mob.kill()
             if self.p1.rect.x < WIDTH:
                 self.p1.rect.x = 0
         #Make more platforms
