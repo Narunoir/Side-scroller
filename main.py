@@ -18,8 +18,15 @@ class Game:
         self.font_name = pygame.font.match_font(FONT_NAME)
         self.load_data()
 
+
     def load_data(self):
-        pass
+        self.dir = path.dirname(__file__)
+        with open(path.join(self.dir, HS_FILE), 'w') as f:
+            # An exception to avoid crashing from no filename
+            try:
+                self.highscore = int(f.read())
+            except:
+                self.highscore = 0
 
     def new_game(self):
         #things I want every time I start a new game.
@@ -34,16 +41,19 @@ class Game:
         p3 = Platform(500, 400, 100, 20)
         mob1 = Mob(WIDTH - 15, HEIGHT - 100, 100, 40)
         mob2 = Mob(50, HEIGHT - 100, 100, 40)
-        self.all_sprites.add(self.player, self.p1, p2,p3, mob1,mob2)
+        self.all_sprites.add(self.player, self.p1,p2,p3, mob1,mob2)
         self.platforms.add(self.p1, p2, p3)
         self.mobs.add(mob1, mob2)
 
         self.mob_timer = 0
+        self.mob_swing = 0
+        pg.mixer.music.load(path.join(snd_dir, 'bob1.mp3'))
         self.run()
         self.start_screen()
 
     def run(self):
         #game loop
+        pg.mixer.music.play(loops=-1)
         self.playing = True
         while self.playing:
             self.clock.tick(FPS)
@@ -69,6 +79,7 @@ class Game:
 
 
     def update(self):
+        now = pg.time.get_ticks()
         self.all_sprites.update()
         hits = pg.sprite.spritecollide(self.player, self.platforms, False)
         if hits:
@@ -84,29 +95,24 @@ class Game:
                 mob.vel.y = 0
 
         # Mobs Attacking
+        mob_now = pg.time.get_ticks()
+        #if mob_now -
         mob_attacks = pg.sprite.spritecollide(self.player, self.mobs, False)
         for mob in mob_attacks:
-            pass
-            #mob.health -= 25
-            #if mob.health <= 0:
-                #mob.kill()
-            #if self.player.face_left == False:
-                #if mob.vel.x < 0:
-                    #mob.pos.x += 200
-                #if mob.vel.x > 0:
-                    #mob.pos.x -= 200
-            #elif self.player.face_left == True:
-                #if mob.vel.x > 0:
-                    #mob.pos.x -= 200
-                #if mob.vel.x < 0:
-                    #mob.pos.x += 200
-
-
+            self.player.health -= 10
+            if mob.vel.x < 0:
+                mob.pos.x += 75
+            if mob.vel.x > 0:
+                mob.pos.x -= 75
+            if self.player.health <= 0:
+                self.player.hide()
+                self.player.lives -=1
+                self.player.health = PLAYER_HEALTH
+                #self.player.pos = vec(WIDTH /4, HEIGHT - 50)
 
 
         #make more mobs
         Mob_list = [Mob(WIDTH + 150, HEIGHT - 100, 100, 40)]
-        now = pg.time.get_ticks()
         if now - self.mob_timer > 5000 + random.choice([ 0,100, 2000, 5500, 9000]):
             self.mob_timer = now
             if len(self.mobs) < 3:
@@ -137,18 +143,73 @@ class Game:
                 self.all_sprites.add(plat)
                 self.platforms.add(plat)
 
+        if self.player.lives == 0:
+            self.playing = False
+
     def draw(self):
         self.screen.fill(BLUE)
         self.all_sprites.draw(self.screen)
         for sprite in self.all_sprites:
             if isinstance(sprite, Mob):
-                sprite.draw_health()
+                sprite.draw_mob_health()
+        self.player.draw_player_health(self.screen, 10, 10, self.player.health)
+        self.player.draw_player_lives(self.screen, WIDTH - 150, 10, self.player.lives, self.player.player_mini_image)
+        self.draw_text(str(self.player.score), 30, WHITE, WIDTH /2, 15)
         pg.display.flip()
-    def start_screen(self):
-        pass
 
+
+    def draw_text(self, text, size, color, x, y):
+        font = pygame.font.Font(self.font_name, size)
+        text_surface = font.render(text, True, color)
+        text_rect = text_surface.get_rect()
+        text_rect.midtop = (x, y)
+        self.screen.blit(text_surface, text_rect)
+
+
+    def start_screen(self):
+        # game start screen
+        pg.mixer.music.load(path.join(snd_dir, 'bob2.ogg'))
+        pg.mixer.music.play(loops=-1)
+        self.screen.fill(BLUE)
+        self.draw_text(TITLE, 48, WHITE, WIDTH /2, HEIGHT /4)
+        self.draw_text("Arrows to move,   Space to jump", 22, WHITE, WIDTH /2, HEIGHT /2)
+        self.draw_text("Press any key to Start", 22, WHITE, WIDTH /2, HEIGHT * 3/4)
+        self.draw_text("High Score: " + str(self.highscore), 22, WHITE, WIDTH /2, 20)
+        pg.display.flip()
+        self.wait_for_key()
+        pg.mixer.music.fadeout(500)
+
+
+    def wait_for_key(self):
+        waiting = True
+        while waiting:
+            self.clock.tick(FPS)
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    waiting = False
+                    self.running = False
+                if event.type == pg.KEYUP:
+                    waiting = False
     def game_over(self):
-        pass
+        # game over screen
+        if not self.running:
+            return
+        pg.mixer.music.load(path.join(snd_dir, 'lmc1.ogg'))
+        pg.mixer.music.play(loops=-1)
+        self.screen.fill(BLUE)
+        self.draw_text("Game Over", 48, WHITE, WIDTH /2, HEIGHT /4)
+        self.draw_text("SCORE: "+ str(self.player.score), 22, WHITE, WIDTH /2, HEIGHT /2)
+        self.draw_text("To Play Again,  Press any Key", 22, WHITE, WIDTH /2, HEIGHT * 3/4)
+        #if self.player.score > self.highscore:
+            #self.highscore = self.player.score
+            #self.draw_text("!! NEW HIGH SCORE !!", 22, WHITE, WIDTH /2, HEIGHT /2 + 40)
+            #with open(path.join(self.dir, HS_FILE), 'w') as f:
+                #f.write(str(self.player.score))
+        #else:
+            #self.draw_text("High Score: " + str(self.highscore), 22, WHITE, WIDTH /2, HEIGHT / 2 + 40)
+        pg.display.flip()
+        self.wait_for_key()
+
 
 g = Game()
 g.start_screen()

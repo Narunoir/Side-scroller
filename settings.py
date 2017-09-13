@@ -5,6 +5,9 @@ HEIGHT = 650
 FPS    = 60
 FONT_NAME = 'Arial'
 TITLE     = "Hacks n Slash"
+HS_FILE   = "highscore.txt"
+
+
 
 WHITE  = (255, 255, 255)
 BLACK  = (0, 0, 0)
@@ -23,14 +26,6 @@ PLAYER_FRICTION = -0.12
 PLAYER_GRAV = 0.5
 PLAYER_HEALTH = 250
 ATTACH_DAMAGE = 10
-
+PH_BAR_HEIGHT = 20
 #Mob Properties
 MOB_HEALTH = 100
-
-
-
-PLATFORM_LIST = [(WIDTH /2 -200, HEIGHT *3/4, 100, 20),
-                 (500, 400, 100, 20), (300, 200, 80, 20)]
-
-def collide_hit_rect(one, two):
-    return one.hit_rect.colliderect(two.rect)
