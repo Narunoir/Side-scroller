@@ -6,6 +6,9 @@ from sprites import *
 #from os import path
 #Art from Irina Mir (irmirx)(SKELETON),(ZOMBIE)
 #Art from Killyoverdrive (Knight)
+#Art from Kungfu4000 (fire)
+#Music bu Tom Peter
+
 
 class Game:
     def __init__(self):
@@ -34,6 +37,7 @@ class Game:
         self.platforms = pg.sprite.Group()
         self.mobs = pg.sprite.Group()
 
+        self.boss = Boss(WIDTH + 300, HEIGHT - 50, 120, 250)
         self.player = Player(self)
 
         self.p1 = Platform(0, HEIGHT -40, WIDTH, 40)
@@ -47,7 +51,8 @@ class Game:
 
         self.mob_timer = 0
         self.mob_swing = 0
-        pg.mixer.music.load(path.join(snd_dir, 'bob1.mp3'))
+        self.boss_counter = 0
+        pg.mixer.music.load(path.join(snd_dir, 'bob1.ogg'))
         self.run()
         self.start_screen()
 
@@ -87,6 +92,12 @@ class Game:
                 self.player.pos.y = hits[0].rect.top
                 self.player.vel.y = 1
 
+        if self.boss_counter == 10:
+            self.all_sprites.add(self.boss)
+            self.mobs.add(self.boss)
+            if self.boss.health <= 0:
+                self.boss.kill()
+                self.boss_counter = 0
 
         # Mobs walk on platforms
         for mob in self.mobs:
@@ -128,6 +139,7 @@ class Game:
                 plat.rect.x -= max(abs(self.player.vel.x), 2)
                 if plat.rect.x <= 0 - 400:
                     plat.kill()
+                    self.boss_counter += 1
             for mob in self.mobs:
                 mob.pos.x -= max(abs(self.player.vel.x), 3)
                 if mob.pos.x < 0 -1000:
@@ -145,6 +157,8 @@ class Game:
 
         if self.player.lives == 0:
             self.playing = False
+
+
 
     def draw(self):
         self.screen.fill(BLUE)

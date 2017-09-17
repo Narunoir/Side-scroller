@@ -217,3 +217,39 @@ class Sword(pygame.sprite.Sprite):
         self.total_move += 75
         if self.total_move > 200:
             self.kill()
+
+class Boss(pg.sprite.Sprite):
+    def __init__(self, x, y, w, h):
+        pg.sprite.Sprite.__init__(self)
+        mob_img = pygame.image.load(path.join(img_dir, "go_1.png")).convert()
+        self.image = pygame.transform.scale(mob_img, (120, 250))
+        self.image.set_colorkey(WHITE)
+        self.rect = self.image.get_rect()
+        self.rect.center = (WIDTH -10, HEIGHT - 100)
+        self.rect.x = x
+        self.rect.y = y
+        self.pos  = vec(x, y)
+        self.vel  = vec(-3, 2)
+        self.health = BOSS_HEALTH
+
+    def update(self):
+        self.pos += self.vel
+        self.rect.midbottom = self.pos
+        if self.pos.x < WIDTH /2:
+            if self.vel.x < 0:
+                self.vel.x *= -1
+        if self.pos.x > WIDTH - 25:
+            if self.vel.x > 0:
+                self.vel.x *= -1
+
+    def draw_boss_health(self):
+        if self.health > BOSS_HEALTH * 60/100:
+            col = GREEN
+        elif self.health > BOSS_HEALTH * 30/100:
+            col = YELLOW
+        else:
+            col = RED
+        width = int(self.rect.width * self.health / BOSS_HEALTH)
+        self.health_bar = pg.Rect(0, 0, width, 7)
+        if self.health < 1500:
+            pg.draw.rect(self.image, RED, self.health_bar)
